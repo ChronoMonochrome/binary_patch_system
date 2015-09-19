@@ -49,9 +49,9 @@ gen_delta() {
     git reset --hard HEAD
     for i in $files
     do
-        echo "generating out/$i.bsdiff..."
+        echo "generating out/$i.xdelta..."
         
-        bsdiff $i out/$i out/$i.bsdiff &
+        xdelta delta $i out/$i out/$i.xdelta &
 
         NPROC=$(($NPROC+1))
         if [ "$NPROC" -ge $JOBS ]; then
@@ -132,7 +132,7 @@ apply_delta() {
     for i in $files
     do
         echo "patching $i..."
-        bspatch $i out/$i $i.bsdiff
+        xdelta patch $i.xdelta $i out/$i
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             for j in "${patched_md5[@]}"
             do
@@ -225,7 +225,7 @@ gen_update()
     for i in $files
     do
         echo "patching $i..."
-        bspatch $i out/$i $i.bsdiff
+        xdelta patch $i.xdelta $i out/$i
         
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             for j in "${patched_md5[@]}"
@@ -263,7 +263,7 @@ gen_update()
     
     for i in $files
     do
-        rm $i.bsdiff
+        rm $i.xdelta
     done
     
     cd out
