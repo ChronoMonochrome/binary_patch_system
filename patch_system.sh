@@ -3,6 +3,7 @@
 # between changed files using bsdiff. usage: get_delta *BASE* *COMMIT*,
 #    e.g. gen_delta HEAD~1 HEAD
 gen_delta() {
+    JOBS=10
     echo "Reset to $1..."
     git reset --hard $1
     git clean -fd
@@ -24,21 +25,32 @@ gen_delta() {
     do
         echo "generating out/$i.bsdiff..."
         
+        bsdiff $i out/$i out/$i.bsdiff &
+
+        NPROC=$(($NPROC+1))
+        if [ "$NPROC" -ge $JOBS ]; then
+            if [ "$VERBOSE" == "1" ]; then
+                echo "NPROC == $NPROC, waiting"
+            fi
+            wait
+            NPROC=0
+        fi
+    done
+	
+	wait
+	
+	for i in $files
+    do    
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             md5sum $i >> orig_md5.txt
-        fi
-        
-        bsdiff $i out/$i out/$i.bsdiff
-        
-        if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             md5sum out/$i >> patched_md5.txt
-        fi
-        
+        fi     
         rm out/$i
     done
+
     cd out
     cp ../files.txt ../orig_md5.txt ../patched_md5.txt $PWD
-    zip -0r ../delta.zip *
+    zip -9r ../delta.zip *
     cd ..
     unset DISABLE_MD5_CHECK
 }
