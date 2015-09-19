@@ -1,23 +1,28 @@
 ############## generate delta.zip ############
 # Requires a git repository, containing at least two versions of the ROM, and tool bsdiff isntalled. Generates diffs 
 # between changed files using bsdiff. usage: get_delta *BASE* *COMMIT*,
-#	e.g. get_delta HEAD~1 HEAD
+#	e.g. gen_delta HEAD~1 HEAD
 gen_delta() {
-    git reset --hard $1
-    git clean -fd
-    git cherry-pick -n $2
+	echo "Reset to $1..."
+    git reset --hard $1 1&>/dev/null
+    git clean -fd 1&>/dev/null
+    git cherry-pick -n $2 1&>/dev/null
     
+	echo "Getting the modified files list..."
     for i in $(git status -uno | grep modified)
     do
         echo $i | cut -d':' -f 2 >> files.txt
     done
     files=$(tr '\n' ' ' < files.txt)
     mkdir out
+	echo "Copying to ./out..."
     cp --parents $files out
     
-    git reset --hard
+	echo "Reset to HEAD..."
+    git reset --hard 1&>/dev/null
     for i in $files
     do
+		echo "generating out/$i.bsdiff..."
 		md5sum $i >> orig_md5.txt
         bsdiff $i out/$i out/$i.bsdiff
 		md5sum out/$i >> patched_md5.txt
@@ -26,6 +31,7 @@ gen_delta() {
     cd out
     cp ../files.txt ../orig_md5.txt ../patched_md5.txt $PWD
     zip -0r ../delta.zip *
+	cd ..
 }
 
 ########## apply delta.zip ##################
