@@ -12,3 +12,9 @@ usage: get_delta *BASE* *COMMIT*, e.g. get_delta HEAD~1 HEAD .
 Applies diffs that contains in delta.zip to the ROM. The file delta.zip should be placed into the same directory as a ROM.
 
 usage: apply_delta *ROM*, e.g. apply_delta vanir_codina_4.4.4.091715.zip .
+
+3) generate update.zip
+
+Generates file update.zip with patched ROM files using an existing delta.zip file with diffs.
+
+Usage: gen_update *ROM*, e.g. gen_update vanir_codina_4.4.4.091715.zip
