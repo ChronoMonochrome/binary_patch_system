@@ -1,11 +1,11 @@
 . patch_system.sh
 
-1) get delta.zip
+1) generate delta.zip
 
 Requires a git repository, containing at least two versions of the ROM, and tool bsdiff isntalled. Generates diffs 
 between changed files using bsdiff. 
 
-usage: get_delta *BASE* *COMMIT*, e.g. get_delta HEAD~1 HEAD .
+usage: gen_delta *BASE* *COMMIT*, e.g. get_delta HEAD~1 HEAD .
 
 2) apply delta.zip
 
