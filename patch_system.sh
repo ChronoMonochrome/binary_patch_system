@@ -51,7 +51,7 @@ gen_delta() {
     do
         echo "generating out/$i.xdelta..."
         
-        xdelta delta $i out/$i out/$i.xdelta &
+        xdelta3 -e -s $i out/$i out/$i.xdelta &
 
         NPROC=$(($NPROC+1))
         if [ "$NPROC" -ge $JOBS ]; then
@@ -132,7 +132,7 @@ apply_delta() {
     for i in $files
     do
         echo "patching $i..."
-        xdelta patch $i.xdelta $i out/$i
+        xdelta3 -d -s $i $i.xdelta out/$i
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             for j in "${patched_md5[@]}"
             do
@@ -225,7 +225,7 @@ gen_update()
     for i in $files
     do
         echo "patching $i..."
-        xdelta patch $i.xdelta $i out/$i
+        xdelta3 -d -s $i $i.xdelta out/$i
         
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             for j in "${patched_md5[@]}"
