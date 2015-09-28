@@ -34,24 +34,46 @@ gen_delta() {
     git reset --hard $1
     git clean -fd
     git cherry-pick -n $2
+
+    git status -uno > git.tmp
     
     echo "Getting the modified files list..."
-    for i in $(git status -uno | grep modified)
+    for i in $(cat git.tmp | grep modified)
     do
         echo $i | cut -d':' -f 2 >> files.txt
     done
+
+    for i in $(cat git.tmp | grep "file:")
+    do
+        tmp=$(echo $i | cut -d':' -f 2)
+	if test -f $tmp ; then
+		echo $tmp >> added_files.txt
+	fi
+    done
+
+    for i in $(cat git.tmp | grep deleted)
+    do
+        echo $i | cut -d':' -f 2 >> deleted_files.txt
+    done
+
     files=$(tr '\n' ' ' < files.txt)
+    added_files=$(tr '\n' ' ' < added_files.txt)
+    deleted_files=$(tr '\n' ' ' < deleted_files.txt)
     mkdir -p out
     echo "Copying to ./out..."
-    cp --parents $files out
+    cp --parents $files $added_files out
     
     echo "Reset to HEAD..."
     git reset --hard HEAD
-    for i in $files
+    for i in $files $added_files
     do
         echo "generating out/$i.xdelta..."
         
-        xdelta3 -e -s $i out/$i out/$i.xdelta &
+	if test -f $i ; then
+	        xdelta3 -e -s $i out/$i out/$i.xdelta &
+	else
+		xdelta3 -e -s /dev/null out/$i out/$i.xdelta &
+	fi
 
         NPROC=$(($NPROC+1))
         if [ "$NPROC" -ge $JOBS ]; then
@@ -63,19 +85,23 @@ gen_delta() {
         fi
     done
 	
-	wait
+    wait
 	
-	for i in $files
+    for i in $files $added_files
     do    
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
-            md5sum $i >> orig_md5.txt
+	    if test -f $i ; then
+	            md5sum $i >> orig_md5.txt
+	    else
+		   md5sum /dev/null >> orig_md5.txt
+	    fi 
             md5sum out/$i >> patched_md5.txt
         fi     
         rm out/$i
     done
 
     cd out
-    cp ../files.txt ../orig_md5.txt ../patched_md5.txt $PWD
+    cp ../files.txt ../added_files.txt ../deleted_files.txt ../orig_md5.txt ../patched_md5.txt $PWD
     zip -9r ../delta.zip *
     cd ..
     unset DISABLE_MD5_CHECK
