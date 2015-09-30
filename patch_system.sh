@@ -216,11 +216,13 @@ gen_update()
         esac
         shift
     done
-    rm -fr out system files.txt orig_md5.txt patched_md5.txt update.zip
+    rm -fr out system files.txt added_files.txt deleted_files.txt orig_md5.txt patched_md5.txt update.zip
     unzip delta.zip
     files=$(cat files.txt)
+	added_files=$(cat added_files.txt)
+	deleted_files=$(cat deleted_files.txt)
     
-    for i in $(find system)
+    for i in $(find system) $(find install) $(find codinap) $(find META-INF) 
     do
         if test -d $i ; then
             mkdir -p out/$i
@@ -233,6 +235,9 @@ gen_update()
         do
             md5=$(echo $line | awk '{print $1}')
             file=$(echo $line | awk '{print $2}')
+			if ! test -f $file ; then
+				file=/dev/null
+			fi
             if [ "$(md5sum $file | grep -c $md5)" == "" ] ; then
                 echo "check $file md5: mismatch!"
                 return
@@ -248,10 +253,14 @@ gen_update()
         done < patched_md5.txt && unset index
     fi
     
-    for i in $files
+    for i in $files $added_files
     do
         echo "patching $i..."
-        xdelta3 -d -s $i $i.xdelta out/$i
+		if test -f $i ; then
+			xdelta3 -d -s $i $i.xdelta out/$i
+		else
+			xdelta3 -d -s /dev/null $i.xdelta out/$i
+		fi
         
         if [ "$DISABLE_MD5_CHECK" != "1" ]; then
             for j in "${patched_md5[@]}"
@@ -270,8 +279,6 @@ gen_update()
                 else
                     echo "check $file md5: ok"
                 fi
-            else
-                echo "warning: file name not matched: $i"
             fi
         fi
 
@@ -287,7 +294,7 @@ gen_update()
     
     wait
     
-    for i in $files
+    for i in $files $added_files
     do
         rm $i.xdelta
     done
