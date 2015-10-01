@@ -76,7 +76,7 @@ gen_delta() {
 	fi
 
         NPROC=$(($NPROC+1))
-        if [ "$NPROC" -ge $JOBS ]; then
+        if [ $NPROC -ge $JOBS ]; then
             if [ "$VERBOSE" == "1" ]; then
                 echo "NPROC == $NPROC, waiting"
             fi
@@ -283,7 +283,7 @@ gen_update()
         fi
 
         NPROC=$(($NPROC+1))
-        if [ "$NPROC" -ge $JOBS ]; then
+        if [ $NPROC -ge $JOBS ]; then
             if [ "$VERBOSE" == "1" ]; then
                 echo "NPROC == $NPROC, waiting"
             fi
