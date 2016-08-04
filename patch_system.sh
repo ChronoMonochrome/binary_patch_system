@@ -128,7 +128,7 @@ gen_delta() {
 
 ########## apply delta.zip ##################
 # Applies diffs that contains in delta.zip to the ROM. usage: apply_delta *ROM*,
-#     e.g. apply_delta vanir_codina_4.4.4.091715.zip
+#     e.g. ROM=vanir_codina_4.4.4.091715.zip apply_delta -d
 apply_delta() {
     while [ ! $# -eq 0 ]
     do
@@ -136,10 +136,7 @@ apply_delta() {
             --disable-md5-check | -d)
                 DISABLE_MD5_CHECK=1
                 ;;
-            *)
-                ROM=$1
-                ;;
-        esac
+		esac
         shift
     done
     
@@ -160,7 +157,7 @@ apply_delta() {
         fi
     done
     
-    unzip $1 $files
+    unzip $ROM $files
     if [ "$DISABLE_MD5_CHECK" != "1" ]; then
         while read line
         do
@@ -216,8 +213,8 @@ apply_delta() {
         rm -fr out
     fi
     
-    cp $1 $1.bak
-    zip -9r $1 $files
+    cp $ROM $ROM.bak
+    zip -9r $ROM $files
     unset DISABLE_MD5_CHECK
     unset ROM
 }
